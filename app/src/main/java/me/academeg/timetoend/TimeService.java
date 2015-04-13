@@ -9,7 +9,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
-import android.util.Log;
 import android.util.Pair;
 
 import java.text.ParseException;
@@ -21,17 +20,15 @@ public class TimeService extends Service {
     // Constants
     private final int NOTIFICATION_ID = 1;
 
-
     private NotificationManager notificationManager;
     private BroadcastReceiver broadcastReceiver;
     private ArrayList<Pair<String, String>> timePare;
 
 
-
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.d("ServiceLog", "Create");
+        //Log.d("ServiceLog", "Create");
         notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 
         timePare = new ArrayList<Pair<String, String>>();
@@ -45,39 +42,11 @@ public class TimeService extends Service {
         timePare.add(new Pair<String, String>("18:50", "20:00"));
 
 
+        checkTimeAndSendMsg();
         broadcastReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                Date curDate = new Date();
-                SimpleDateFormat ft =
-                        new SimpleDateFormat ("HH:mm");
-
-                String curDateStr = ft.format(curDate);
-                if (curDateStr.length()<5) curDateStr = '0' + curDateStr;
-
-                for (int i=0; i<timePare.size(); i++) {
-                    if(curDateStr.compareTo(timePare.get(i).first) >= 0) {
-                        if(curDateStr.compareTo(timePare.get(i).second) <= 0) {
-                            try {
-                                long minutes = ft.parse(timePare.get(i).second).getTime()
-                                        - ft.parse(curDateStr).getTime();
-                                sendNotification("Осталость " + Long.toString(minutes/1000/60), "1");
-                            }
-                            catch(ParseException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    }
-                }
-
-
-                String str = ft.format(curDate);
-                try {
-                    Log.d("timeLog", Long.toString(ft.parse(str).getTime()));
-                }
-                catch(ParseException e) {
-                    e.printStackTrace();
-                }
+                checkTimeAndSendMsg();
             }
         };
 
@@ -86,15 +55,15 @@ public class TimeService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d("ServiceLog", "Start command");
-        //sendNotification("Title", "text");
+        //Log.d("ServiceLog", "Start command");
+        checkTimeAndSendMsg();
         return super.onStartCommand(intent, flags, startId);
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.d("ServiceLog", "Destroy");
+        //Log.d("ServiceLog", "Destroy");
         notificationManager.cancel(NOTIFICATION_ID);
         unregisterReceiver(broadcastReceiver);
     }
@@ -106,7 +75,26 @@ public class TimeService extends Service {
         //throw new UnsupportedOperationException("Not yet implemented");
     }
 
-    public void sendNotification(String title, String text) {
+    public void checkTimeAndSendMsg() {
+        Date curDate = new Date();
+
+        SimpleDateFormat ft =
+                new SimpleDateFormat ("HH:mm");
+        String curDateStr = ft.format(curDate);
+        if(curDateStr.compareTo(timePare.get(timePare.size()-1).second) > 0) {
+            sendNotification(getResources().getString(R.string.titleEnd),
+                    getResources().getString(R.string.textEnd),
+                    NOTIFICATION_ID);
+            return;
+        }
+
+        long minutes = getMinutesToEnd(curDate);
+        sendNotification(Long.toString(minutes) + " " + getResources().getString(R.string.minutes),
+                getResources().getString(R.string.before_end_pair) + " " + Long.toString(minutes)
+                        + " " + getResources().getString(R.string.minutes), NOTIFICATION_ID);
+    }
+
+    public void sendNotification(String title, String text, int notifyId) {
         NotificationCompat.Builder mBuilder =
                 new NotificationCompat.Builder(this)
                         .setSmallIcon(R.mipmap.ic_launcher)
@@ -116,6 +104,32 @@ public class TimeService extends Service {
         Intent resultIntent = new Intent(this, MainActivity.class);
         PendingIntent resultPendingIntent = PendingIntent.getActivity(this, 0, resultIntent, 0);
         mBuilder.setContentIntent(resultPendingIntent);
-        notificationManager.notify(NOTIFICATION_ID, mBuilder.build());
+        notificationManager.notify(notifyId, mBuilder.build());
     }
+
+    public long getMinutesToEnd(Date curDate) {
+        SimpleDateFormat ft =
+                new SimpleDateFormat ("HH:mm");
+
+        String curDateStr = ft.format(curDate);
+        if (curDateStr.length()<5) curDateStr = '0' + curDateStr;
+
+        long minutes = 0;
+        for (int i=0; i<timePare.size(); i++) {
+            if(curDateStr.compareTo(timePare.get(i).first) >= 0) {
+                if(curDateStr.compareTo(timePare.get(i).second) <= 0) {
+                    try {
+                        minutes = ft.parse(timePare.get(i).second).getTime()
+                                - ft.parse(curDateStr).getTime();
+                    }
+                    catch(ParseException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+        minutes = minutes/1000/60;
+        return minutes;
+    }
+
 }

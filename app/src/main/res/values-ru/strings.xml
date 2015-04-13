@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Time to end</string>
+
+    <string name="action_settings">Настройки</string>
+    <string name="startService">Запустить сервис</string>
+    <string name="stopService">Остановить сервис</string>
+    <string name="minutes">мин</string>
+    <string name="before_end_pair">До конца пары </string>
+    <string name="titleEnd">Конец!!!</string>
+    <string name="textEnd">Все пары закончены</string>
+</resources>

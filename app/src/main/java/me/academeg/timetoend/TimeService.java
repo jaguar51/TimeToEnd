@@ -12,6 +12,7 @@ import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.util.Pair;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -33,17 +34,50 @@ public class TimeService extends Service {
         Log.d("ServiceLog", "Create");
         notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 
-        /*timePare = new ArrayList<Pair<String, String>>();
-        timePare.add(new Pair<String, String>("8:00", "9:10"));*/
+        timePare = new ArrayList<Pair<String, String>>();
+        timePare.add(new Pair<String, String>("08:00", "09:20"));
+        timePare.add(new Pair<String, String>("09:30", "10:50"));
+        timePare.add(new Pair<String, String>("11:00", "12:20"));
+        timePare.add(new Pair<String, String>("12:40", "14:00"));
+        timePare.add(new Pair<String, String>("14:20", "15:40"));
+        timePare.add(new Pair<String, String>("15:50", "17:10"));
+        timePare.add(new Pair<String, String>("17:20", "18:40"));
+        timePare.add(new Pair<String, String>("18:50", "20:00"));
 
 
         broadcastReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                Date date = new Date();
+                Date curDate = new Date();
                 SimpleDateFormat ft =
                         new SimpleDateFormat ("HH:mm");
-                Log.d("timelog", ft.format(date));
+
+                String curDateStr = ft.format(curDate);
+                if (curDateStr.length()<5) curDateStr = '0' + curDateStr;
+
+                for (int i=0; i<timePare.size(); i++) {
+                    if(curDateStr.compareTo(timePare.get(i).first) >= 0) {
+                        if(curDateStr.compareTo(timePare.get(i).second) <= 0) {
+                            try {
+                                long minutes = ft.parse(timePare.get(i).second).getTime()
+                                        - ft.parse(curDateStr).getTime();
+                                sendNotification("Осталость " + Long.toString(minutes/1000/60), "1");
+                            }
+                            catch(ParseException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                }
+
+
+                String str = ft.format(curDate);
+                try {
+                    Log.d("timeLog", Long.toString(ft.parse(str).getTime()));
+                }
+                catch(ParseException e) {
+                    e.printStackTrace();
+                }
             }
         };
 
@@ -53,7 +87,7 @@ public class TimeService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d("ServiceLog", "Start command");
-        sendNotification("Title", "text");
+        //sendNotification("Title", "text");
         return super.onStartCommand(intent, flags, startId);
     }
 

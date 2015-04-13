@@ -1,6 +1,5 @@
 package me.academeg.timetoend;
 
-import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -11,12 +10,21 @@ import android.content.IntentFilter;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+import android.util.Pair;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
 
 public class TimeService extends Service {
+    // Constants
+    private final int NOTIFICATION_ID = 1;
+
 
     private NotificationManager notificationManager;
     private BroadcastReceiver broadcastReceiver;
-    private final int NOTIFICATION_ID = 1;
+    private ArrayList<Pair<String, String>> timePare;
+
 
 
     @Override
@@ -25,10 +33,17 @@ public class TimeService extends Service {
         Log.d("ServiceLog", "Create");
         notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 
+        /*timePare = new ArrayList<Pair<String, String>>();
+        timePare.add(new Pair<String, String>("8:00", "9:10"));*/
+
+
         broadcastReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                Log.d("timelog", Long.toString(System.currentTimeMillis()));
+                Date date = new Date();
+                SimpleDateFormat ft =
+                        new SimpleDateFormat ("HH:mm");
+                Log.d("timelog", ft.format(date));
             }
         };
 
@@ -46,7 +61,8 @@ public class TimeService extends Service {
     public void onDestroy() {
         super.onDestroy();
         Log.d("ServiceLog", "Destroy");
-        notificationManager.cancel(1);
+        notificationManager.cancel(NOTIFICATION_ID);
+        unregisterReceiver(broadcastReceiver);
     }
 
     @Override
@@ -66,6 +82,6 @@ public class TimeService extends Service {
         Intent resultIntent = new Intent(this, MainActivity.class);
         PendingIntent resultPendingIntent = PendingIntent.getActivity(this, 0, resultIntent, 0);
         mBuilder.setContentIntent(resultPendingIntent);
-        notificationManager.notify(1, mBuilder.build());
+        notificationManager.notify(NOTIFICATION_ID, mBuilder.build());
     }
 }

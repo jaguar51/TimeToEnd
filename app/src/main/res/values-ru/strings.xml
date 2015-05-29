@@ -9,4 +9,6 @@
     <string name="before_end_pair">До конца пары </string>
     <string name="titleEnd">Конец!!!</string>
     <string name="textEnd">Все пары закончены</string>
+    <string name="vibrationOn">Включить вибрацию</string>
+    <string name="nextPair">Следующая пара в</string>
 </resources>

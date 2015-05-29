@@ -21,5 +21,13 @@
         android:id="@+id/stopServiceBtn"
         android:layout_gravity="center_horizontal"
         android:onClick="onClickStopService"/>
+
+    <CheckBox
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/vibrationOn"
+        android:id="@+id/checkBox"
+        android:layout_gravity="center_horizontal"
+        android:enabled="false"/>
 </LinearLayout>
 

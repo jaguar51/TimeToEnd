@@ -1,5 +1,6 @@
 package me.academeg.timetoend;
 
+import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -17,18 +18,19 @@ import java.util.ArrayList;
 import java.util.Date;
 
 public class TimeService extends Service {
-    // Constants
     private final int NOTIFICATION_ID = 1;
 
     private NotificationManager notificationManager;
     private BroadcastReceiver broadcastReceiver;
     private ArrayList<Pair<String, String>> timePare;
+    private boolean vibrate;
 
 
     @Override
     public void onCreate() {
         super.onCreate();
         //Log.d("ServiceLog", "Create");
+        vibrate = false;
         notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 
         timePare = new ArrayList<Pair<String, String>>();
@@ -39,8 +41,9 @@ public class TimeService extends Service {
         timePare.add(new Pair<String, String>("14:20", "15:40"));
         timePare.add(new Pair<String, String>("15:50", "17:10"));
         timePare.add(new Pair<String, String>("17:20", "18:40"));
-        timePare.add(new Pair<String, String>("18:50", "20:00"));
-
+//        timePare.add(new Pair<String, String>("18:50", "20:10"));
+        timePare.add(new Pair<String, String>("18:50", "19:16"));
+        timePare.add(new Pair<String, String>("19:18", "20:00"));
 
         checkTimeAndSendMsg();
         broadcastReceiver = new BroadcastReceiver() {
@@ -76,19 +79,33 @@ public class TimeService extends Service {
     }
 
     public void checkTimeAndSendMsg() {
-        Date curDate = new Date();
+        Time curTime = new Time();
 
-        SimpleDateFormat ft =
-                new SimpleDateFormat ("HH:mm");
-        String curDateStr = ft.format(curDate);
-        if(curDateStr.compareTo(timePare.get(timePare.size()-1).second) > 0) {
+        if(curTime.compareTo(timePare.get(timePare.size()-1).second) > 0){
             sendNotification(getResources().getString(R.string.titleEnd),
                     getResources().getString(R.string.textEnd),
                     NOTIFICATION_ID);
             return;
         }
 
-        long minutes = getMinutesToEnd(curDate);
+        long minutes = 0;
+        for (int i=0; i<timePare.size(); i++) {
+            if(curTime.compareTo(timePare.get(i).first) >= 0) {
+                if(curTime.compareTo(timePare.get(i).second) <= 0) {
+                    minutes = curTime.getMinutesBetweenTime(timePare.get(i).second);
+                    if (minutes==0) this.vibrate = true;
+                }
+                else {
+                    if (curTime.compareTo(timePare.get(i+1).first) < 0) {
+                        sendNotification(timePare.get(i+1).first,
+                                getResources().getString(R.string.nextPair) + " " + curTime.toString(),
+                                NOTIFICATION_ID);
+                        return;
+                    }
+                }
+            }
+        }
+
         sendNotification(Long.toString(minutes) + " " + getResources().getString(R.string.minutes),
                 getResources().getString(R.string.before_end_pair) + " " + Long.toString(minutes)
                         + " " + getResources().getString(R.string.minutes), NOTIFICATION_ID);
@@ -100,36 +117,14 @@ public class TimeService extends Service {
                         .setSmallIcon(R.mipmap.ic_launcher)
                         .setContentTitle(title)
                         .setContentText(text);
-
+        if (this.vibrate) {
+            mBuilder.setVibrate(new long[] { 1000, 1000, 1000, 1000, 1000 });
+            this.vibrate = false;
+        }
         Intent resultIntent = new Intent(this, MainActivity.class);
         PendingIntent resultPendingIntent = PendingIntent.getActivity(this, 0, resultIntent, 0);
         mBuilder.setContentIntent(resultPendingIntent);
         notificationManager.notify(notifyId, mBuilder.build());
-    }
-
-    public long getMinutesToEnd(Date curDate) {
-        SimpleDateFormat ft =
-                new SimpleDateFormat ("HH:mm");
-
-        String curDateStr = ft.format(curDate);
-        if (curDateStr.length()<5) curDateStr = '0' + curDateStr;
-
-        long minutes = 0;
-        for (int i=0; i<timePare.size(); i++) {
-            if(curDateStr.compareTo(timePare.get(i).first) >= 0) {
-                if(curDateStr.compareTo(timePare.get(i).second) <= 0) {
-                    try {
-                        minutes = ft.parse(timePare.get(i).second).getTime()
-                                - ft.parse(curDateStr).getTime();
-                    }
-                    catch(ParseException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        }
-        minutes = minutes/1000/60;
-        return minutes;
     }
 
 }

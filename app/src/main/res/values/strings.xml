@@ -9,4 +9,6 @@
     <string name="before_end_pair">Before the end of the pair</string>
     <string name="titleEnd">That\'s end!!!</string>
     <string name="textEnd">All pairs of finished</string>
+    <string name="vibrationOn">Turn vibration</string>
+    <string name="nextPair">The next pair in</string>
 </resources>

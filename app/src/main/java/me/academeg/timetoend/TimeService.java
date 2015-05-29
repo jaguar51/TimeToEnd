@@ -8,8 +8,10 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
+import android.util.Log;
 import android.util.Pair;
 
 import java.text.ParseException;
@@ -24,7 +26,7 @@ public class TimeService extends Service {
     private BroadcastReceiver broadcastReceiver;
     private ArrayList<Pair<String, String>> timePare;
     private boolean vibrate;
-
+    private SharedPreferences preferences;
 
     @Override
     public void onCreate() {
@@ -41,9 +43,7 @@ public class TimeService extends Service {
         timePare.add(new Pair<String, String>("14:20", "15:40"));
         timePare.add(new Pair<String, String>("15:50", "17:10"));
         timePare.add(new Pair<String, String>("17:20", "18:40"));
-//        timePare.add(new Pair<String, String>("18:50", "20:10"));
-        timePare.add(new Pair<String, String>("18:50", "19:16"));
-        timePare.add(new Pair<String, String>("19:18", "20:00"));
+        timePare.add(new Pair<String, String>("18:50", "20:10"));
 
         checkTimeAndSendMsg();
         broadcastReceiver = new BroadcastReceiver() {
@@ -80,6 +80,7 @@ public class TimeService extends Service {
 
     public void checkTimeAndSendMsg() {
         Time curTime = new Time();
+        preferences = getSharedPreferences("settings", MODE_PRIVATE);
 
         if(curTime.compareTo(timePare.get(timePare.size()-1).second) > 0){
             sendNotification(getResources().getString(R.string.titleEnd),
@@ -114,10 +115,14 @@ public class TimeService extends Service {
     public void sendNotification(String title, String text, int notifyId) {
         NotificationCompat.Builder mBuilder =
                 new NotificationCompat.Builder(this)
-                        .setSmallIcon(R.mipmap.ic_launcher)
+//                        .setSmallIcon(R.mipmap.ic_launcher)
+                        .setSmallIcon(R.mipmap.notify_icon)
                         .setContentTitle(title)
                         .setContentText(text);
-        if (this.vibrate) {
+
+        boolean vibrateSetting = preferences.getBoolean("vibrateOn", false);
+//        Log.d("service", Boolean.toString(vibrateSetting));
+        if (this.vibrate && vibrateSetting) {
             mBuilder.setVibrate(new long[] { 1000, 1000, 1000, 1000, 1000 });
             this.vibrate = false;
         }
